@@ -1,2 +1,3 @@
 # task.lxl
-Task runner for Lite XL
+Simple task runner for Lite XL
+
