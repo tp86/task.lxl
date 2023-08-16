@@ -7,22 +7,20 @@ local tasks = {}
 
 local function runtask(command)
   core.log("Executing task command: '%s'", command)
-  -- execute command (in separate process)
+  -- execute command (in separate process, reuse console plugin?)
   core.add_thread(function()
     local runner = process.start({ "sh", "-c", command })
     while runner:running() do
       coroutine.yield(0.05)
     end
     local returncode = runner:returncode()
-    -- handle errors and output
+    -- TODO handle errors and output
     if returncode == 0 then
       local stdout = runner:read_stdout() or ""
-      -- TODO display stdout somehow (in separate doc? - similar to console/scm/build plugin)
-      core.log("task output: '%s'", stdout)
+      core.log_quiet("task output: '%s'", stdout)
     else
       local stderr = runner:read_stderr() or ""
-      -- TODO display stderr somehow
-      core.log("task error: '%s'", stderr)
+      core.log_quiet("task error: '%s'", stderr)
     end
   end)
 end
