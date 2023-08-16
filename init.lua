@@ -15,7 +15,12 @@ end
 
 local function getprojecttasks()
   local projectdir = core.project_dir
-  return tasks[projectdir] or {}
+  local projecttasks = tasks[projectdir]
+  if not projecttasks then
+    projecttasks = {}
+    tasks[projectdir] = projecttasks
+  end
+  return projecttasks
 end
 
 local function addtasks(taskstoadd)
@@ -23,7 +28,6 @@ local function addtasks(taskstoadd)
   for name, command in pairs(taskstoadd) do
     projecttasks[name] = command
   end
-  tasks[projectdir] = projecttasks
 end
 
 local function anyprojecttask()
