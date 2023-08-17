@@ -20,14 +20,13 @@ local function run(name, task)
   core.log("Executing '%s' task", name)
   core.add_thread(function()
     local runner = process.start({ "sh", "-c", task .. " 2>&1" })
-    local output = outputdoc("Task '"..name.."' output", nil, true)
+    local output = outputdoc("@"..name, nil, true)
     local start = system.get_time()
     local opened = false
     while runner:running() do
       local stdout = runner:read_stdout() or ""
-      core.log("read bytes from stdout: %d", #stdout)
       output:append(stdout)
-      if system.get_time() - start > 0.2 then
+      if not opened and system.get_time() - start > 0.2 then
         core.root_view:open_doc(output)
         opened = true
       end
