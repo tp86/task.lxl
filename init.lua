@@ -7,9 +7,11 @@ local doc = require "core.doc"
 local tasks = {}
 
 local outputdoc = doc:extend()
+
 function outputdoc:is_dirty()
   return false
 end
+
 function outputdoc:append(text)
   local line = #self.lines
   local col = #self.lines[line]
@@ -20,13 +22,13 @@ local function run(name, task)
   core.log("Executing '%s' task", name)
   core.add_thread(function()
     local runner = process.start({ "sh", "-c", task .. " 2>&1" })
-    local output = outputdoc("@"..name, nil, true)
+    local output = outputdoc(name .. " output", nil, true)
     local start = system.get_time()
     local opened = false
     while runner:running() do
       local stdout = runner:read_stdout() or ""
       output:append(stdout)
-      if not opened and system.get_time() - start > 0.2 then
+      if not opened and #stdout > 0 and system.get_time() - start > 0.2 then
         core.root_view:open_doc(output)
         opened = true
       end
@@ -40,7 +42,11 @@ local function run(name, task)
       core.log("task failed")
     end
     if not opened then
-      core.root_view:open_doc(output)
+      local stdout = runner:read_stdout() or ""
+      output:append(stdout)
+      if #stdout > 0 then
+        core.root_view:open_doc(output)
+      end
     end
   end)
 end
@@ -85,7 +91,8 @@ local function getprojecttasks()
   return projecttasks
 end
 
-local function addtasks(taskstoadd)
+local function addtasks(taskstoadd, clear)
+  if clear then tasks[core.project_dir] = nil end
   local projecttasks = getprojecttasks()
   for name, command in pairs(taskstoadd) do
     projecttasks[name] = command
